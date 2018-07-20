@@ -46,6 +46,4 @@ module.exports = {
 	votes: [],
 	inertTransactions: [],
 	transactionFee: [],
-	// <version>: { start: <start_height>, end: <end_height> }
-	blockVersions: {},
 };
