@@ -431,7 +431,9 @@ d.run(() => {
 				db
 					.connect(config.db, dbLogger)
 					.then(db => cb(null, db))
-					.catch(cb);
+					.catch(err => {
+						console.error(err);
+					});
 			},
 
 			/**
@@ -540,6 +542,9 @@ d.run(() => {
 							bus(cb) {
 								cb(null, scope.bus);
 							},
+							config(cb) {
+								cb(null, scope.config);
+							},
 							db(cb) {
 								cb(null, scope.db);
 							},
@@ -602,8 +607,9 @@ d.run(() => {
 							],
 							peers: [
 								'logger',
+								'config',
 								function(scope, cb) {
-									new Peers(scope.logger, cb);
+									new Peers(scope.logger, scope.config, cb);
 								},
 							],
 						},
