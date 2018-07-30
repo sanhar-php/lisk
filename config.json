@@ -6,7 +6,7 @@
 	"minVersion": ">=1.0.0-rc.2.2",
 	"fileLogLevel": "debug",
 	"logFileName": "logs/lisk.log",
-	"consoleLogLevel": "error",
+	"consoleLogLevel": "debug",
 	"trustProxy": false,
 	"topAccounts": false,
 	"cacheEnabled": true,
@@ -87,7 +87,7 @@
 	},
 	"forging": {
 		"force": false,
-		"defaultKey": "elephant tree paris dragon chair galaxy",
+		"defaultPassword": "elephant tree paris dragon chair galaxy",
 		"delegates": [
 			{
 				"encryptedPassphrase":
