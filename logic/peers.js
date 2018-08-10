@@ -167,16 +167,6 @@ Peers.prototype.upsert = function(peer, insertOnly) {
 			const recentPeer = self.peersManager.getByAddress(peer.string);
 			// If an entry exists in Ban Manager don't allow to change the state during updates.
 			// Prevents intentionally disconnections of temporarily banned peers.
-			if (
-				self.banManager.bannedPeers[peer.string] &&
-				peer.state !== Peer.STATE.BANNED
-			) {
-				library.logger.info('Attempt to unban peer rejected', peer.string);
-				library.logger.debug('Attempt to unban peer rejected', {
-					peer: peer.object(),
-				});
-				return failureCodes.ON_MASTER.UPDATE.BANNED;
-			}
 			update(recentPeer, peer);
 		} else {
 			return failureCodes.ON_MASTER.INSERT.INSERT_ONLY_FAILURE;
