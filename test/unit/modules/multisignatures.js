@@ -15,35 +15,152 @@
 
 'use strict';
 
+var rewire = require('rewire');
+var transactionTypes = require('../../../helpers/transaction_types.js');
+
+var MultisignaturesModule = rewire('../../../modules/multisignatures.js');
+
 describe('multisignatures', () => {
 	describe('constructor', () => {
+		let library;
+		let loggerStub;
+		let dbStub;
+		let networkStub;
+		let schemaStub;
+		let edStub;
+		let busStub;
+		let balancesSequenceStub;
+		let transactionStub;
+		let accountStub;
+		let error;
+		let multisignatureModuleInstance;
+		let multisignatureModuleSelf;
+		let __private;
+
+		beforeEach(done => {
+			dbStub = {
+				query: sinonSandbox.spy(),
+			};
+
+			loggerStub = {
+				debug: sinonSandbox.spy(),
+				error: sinonSandbox.spy(),
+			};
+
+			busStub = {};
+			schemaStub = {};
+			networkStub = {};
+			balancesSequenceStub = {
+				add: () => {},
+			};
+
+			transactionStub = {
+				attachAssetType: sinonSandbox.stub().returns('attachAssetTypeResponse'),
+			};
+
+			accountStub = {};
+
+			multisignatureModuleInstance = new MultisignaturesModule(
+				(err, multisignatureModule) => {
+					error = err;
+					multisignatureModuleSelf = multisignatureModule;
+					library = MultisignaturesModule.__get__('library');
+					__private = MultisignaturesModule.__get__('__private');
+					done();
+				},
+				{
+					logic: {
+						transaction: transactionStub,
+						account: accountStub,
+					},
+					db: dbStub,
+					logger: loggerStub,
+					bus: busStub,
+					schema: schemaStub,
+					network: networkStub,
+					balancesSequence: balancesSequenceStub,
+				}
+			);
+		});
+
 		describe('library', () => {
-			it('should assign logger');
+			it('should assign logger', () => {
+				return expect(library)
+					.to.have.property('logger')
+					.which.is.equal(loggerStub);
+			});
 
-			it('should assign db');
+			it('should assign db', () => {
+				return expect(library)
+					.to.have.property('db')
+					.which.is.equal(dbStub);
+			});
 
-			it('should assign network');
+			it('should assign network', () => {
+				return expect(library)
+					.to.have.property('network')
+					.which.is.equal(networkStub);
+			});
 
-			it('should assign schema');
+			it('should assign schema', () => {
+				return expect(library)
+					.to.have.property('schema')
+					.which.is.equal(schemaStub);
+			});
 
-			it('should assign ed');
+			it('should assign ed', () => {
+				return expect(library)
+					.to.have.property('ed')
+					.which.is.equal(edStub);
+			});
 
-			it('should assign bus');
+			it('should assign bus', () => {
+				return expect(library)
+					.to.have.property('bus')
+					.which.is.equal(busStub);
+			});
 
-			it('should assign balancesSequence');
+			it('should assign balancesSequence', () => {
+				return expect(library)
+					.to.have.property('balancesSequence')
+					.which.is.equal(balancesSequenceStub);
+			});
 
-			it('should assign logic.transaction');
+			it('should assign logic.transaction', () => {
+				return expect(library)
+					.to.have.nested.property('logic.transaction')
+					.which.is.equal(transactionStub);
+			});
+
+			it('should assign logic.account', () => {
+				return expect(library)
+					.to.have.nested.property('logic.account')
+					.which.is.equal(accountStub);
+			});
 		});
 
 		describe('__private', () => {
-			it('should call library.logic.transaction.attachAssetType');
+			it('should call library.logic.transaction.attachAssetType', () => {
+				return expect(library.logic.transaction.attachAssetType.called).to.be
+					.true;
+			});
 
-			it('assign __private.assetTypes[transactionTypes.MULTI]');
+			it('assign __private.assetTypes[transactionTypes.MULTI]', () => {
+				return expect(__private.assetTypes)
+					.to.have.property(transactionTypes.MULTI)
+					.which.is.equal('attachAssetTypeResponse');
+			});
 		});
 
-		it('should return error = null');
+		it('should return error = null', () => {
+			return expect(error).to.equal(null);
+		});
 
-		it('should return Multisignature instance');
+		it('should return Multisignature instance', () => {
+			return expect(multisignatureModuleInstance).to.equal(
+				multisignatureModuleSelf
+			);
+		});
 	});
 
 	describe('processSignature', () => {
