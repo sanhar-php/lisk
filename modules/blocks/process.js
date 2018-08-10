@@ -475,14 +475,7 @@ Process.prototype.loadBlocksFromPeer = function(peer, cb) {
 					return setImmediate(eachSeriesCb);
 				}
 				// ...then process block
-				return processBlock(block, err => {
-					// Ban a peer if block validation fails
-					// Invalid peers won't get chosen in the next sync attempt
-					if (err) {
-						library.logic.peers.ban(peer);
-					}
-					return eachSeriesCb(err);
-				});
+				return processBlock(block, eachSeriesCb);
 			},
 			err => setImmediate(seriesCb, err)
 		);

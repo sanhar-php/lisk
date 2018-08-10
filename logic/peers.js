@@ -19,7 +19,6 @@ const failureCodes = require('../api/ws/rpc/failure_codes.js');
 const Peer = require('../logic/peer.js');
 const System = require('../modules/system.js');
 const PeersManager = require('../helpers/peers_manager.js');
-const BanManager = require('../helpers/ban_manager.js');
 
 // Private fields
 let self;
@@ -50,7 +49,6 @@ class Peers {
 		self = this;
 
 		this.peersManager = new PeersManager(logger);
-		this.banManager = new BanManager(logger, config);
 
 		return setImmediate(cb, null, this);
 	}
@@ -108,52 +106,6 @@ Peers.prototype.get = function(peer) {
 	}
 	peer = self.create(peer);
 	return self.peersManager.getByAddress(peer.string);
-};
-
-/**
- * Ban peer by setting BANNED state. Make it temporarily using banManager.
- *
- * @param {Peer} peer
- *
- */
-Peers.prototype.ban = function(peer) {
-	peer.state = Peer.STATE.BANNED;
-	// Banning peer can only fail with ON_MASTER.UPDATE.INVALID_PEER error.
-	// Happens when we cannot obtain the proper address of a given peer.
-	// In such a case peer will be removed.
-	if (self.upsert(peer) === false) {
-		library.logger.info('Failed to ban peer', peer.string);
-		library.logger.debug('Failed to ban peer', {
-			err: 'INVALID_PEER',
-			peer: peer.object(),
-		});
-		return self.remove(peer);
-	}
-	self.banManager.banTemporarily(peer, self.unban);
-	library.logger.info('Banned peer', peer.string);
-	library.logger.debug('Banned peer', { peer: peer.object() });
-};
-
-/**
- * Unban peer by setting DISCONNECTED state.
- *
- * @param {Peer} peer
- */
-Peers.prototype.unban = function(peer) {
-	peer.state = Peer.STATE.DISCONNECTED;
-	// Banning peer can only fail with ON_MASTER.UPDATE.INVALID_PEER error.
-	// Happens when we cannot obtain the proper address of a given peer.
-	// In such a case peer will be removed.
-	if (self.upsert(peer) === false) {
-		library.logger.info('Failed to unban peer', peer.string);
-		library.logger.debug('Failed to unban peer', {
-			err: 'INVALID_PEER',
-			peer: peer.object(),
-		});
-		return self.remove(peer);
-	}
-	library.logger.info('Unbanned peer', peer.string);
-	library.logger.debug('Unbanned peer', { peer: peer.object() });
 };
 
 /**
