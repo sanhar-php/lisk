@@ -122,19 +122,6 @@ var middleware = {
 					);
 				}
 
-				// TODO : double check socket IP
-				if (config.blackListedPeers.includes(headers.ip)) {
-					return setImmediate(
-						cb, {
-							code: failureCodes.BLACKLISTED_PEER,
-							description: failureCodes.errorMessages[
-								failureCodes.BLACKLISTED_PEER
-							],
-						},
-						peer
-					);
-				}
-
 				return setImmediate(cb, null, peer);
 			});
 		};
