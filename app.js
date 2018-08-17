@@ -28,6 +28,9 @@ var Sequence = require('./helpers/sequence.js');
 var httpApi = require('./helpers/http_api.js');
 // eslint-disable-next-line import/order
 var swaggerHelper = require('./helpers/swagger');
+var Promise = require('bluebird');
+var dns = require('dns');
+var net = require('net');
 
 /**
  * Main application entry point.
@@ -188,7 +191,7 @@ d.run(() => {
 	async.auto(
 		{
 			/**
-			 * Attempts to determine nethash from genesis block.
+			 * Prepare the config object.
 			 *
 			 * @func config
 			 * @memberof! app
@@ -199,7 +202,34 @@ d.run(() => {
 				if (!appConfig.nethash) {
 					throw Error('Failed to assign nethash from genesis block');
 				}
-				cb(null, appConfig);
+				
+				// In case domain names are used, resolve those to IP addresses.
+				var resolvedPeerListPromises = appConfig.peers.list.map((peer) => {
+					return new Promise((resolve, reject) => {
+						if (net.isIPv4(peer.ip)) {
+							setImmediate(() => {
+								resolve(peer)
+							});
+							return;
+						}
+						dns.lookup(peer.ip, { family: 4 }, (err, address) => {
+							if (err) {
+								console.error(`Failed to resolve peer domain name ${peer.ip} to an IP address`);
+							}
+							resolve(Object.assign({}, peer, { ip: address }));
+						});
+					});
+				});
+
+				Promise.all(resolvedPeerListPromises)
+				.then((peersList) => {
+					appConfig.peers.list = peersList;
+					cb(null, appConfig);
+				})
+				.catch((err) => {
+					console.log(2222333, err); // TODO 2
+					// cb(err, appConfig);
+				});
 			},
 
 			logger(cb) {
@@ -415,20 +445,31 @@ d.run(() => {
 				},
 			],
 
-			/**
-			 * Description of the function.
-			 *
-			 * @memberof! app
-			 * @param {function} cb - Callback function
-			 * @todo Add description for the function and its params
-			 */
-			db(cb) {
-				var db = require('./db');
-				db
-					.connect(config.db, dbLogger)
-					.then(db => cb(null, db))
-					.catch(cb);
-			},
+			db: [
+				'config',
+				/**
+				 * Description of the function.
+				 *
+				 * @memberof! app
+				 * @param {function} cb - Callback function
+				 * @todo Add description for the function and its params
+				 */
+				function(scope, cb) {
+					console.log(999992992);
+					var db = require('./db');
+					db
+						.connect(config.db, dbLogger)
+						.then(db => cb(null, db))
+						.catch(cb);
+				},
+			],
+			// db(cb) { // TODO 2
+			// 	var db = require('./db');
+			// 	db
+			// 		.connect(config.db, dbLogger)
+			// 		.then(db => cb(null, db))
+			// 		.catch(cb);
+			// },
 
 			/**
 			 * Description of the function.
